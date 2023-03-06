@@ -1,32 +1,61 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
 import './App.css'
+import PokemonCard from './components/PokemonCard';
+import { getPokemon } from './PokemonAPI';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [name, setName] = useState('')
+  const [pokemon, setPokemon] = useState({})
+  const [pokemonFound, setPokemonFound] = useState(false)
+
+  const handleInputChange = (event: any) => {
+    event.preventDefault();
+    const { value } = event.target;
+    setName(value)
+  }
+
+  const handleSubmit = (event: any) => {
+    event.preventDefault();
+    console.debug('name', name)
+
+    function parseStats(data: any) {
+      let stats: any = {}
+      stats['hp'] = data.stats[0].base_stat
+      stats['atk'] = data.stats[1].base_stat
+      stats['def'] = data.stats[2].base_stat
+      stats['spAtk'] = data.stats[3].base_stat
+      stats['spDef'] = data.stats[4].base_stat
+      stats['spd'] = data.stats[5].base_stat
+  
+      return stats
+    }
+    
+    getPokemon(name)
+      .then(data => {
+        const pokemon = {
+          id: data.id,
+          stats: parseStats(data)
+        }
+        setPokemon(pokemon)
+        setPokemonFound(true)
+      })
+      .catch(error => console.error(error))
+  }
 
   return (
     <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
       <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+        
+        <form onSubmit={handleSubmit}>
+          <label style={{marginRight: '10px'}}>
+            Pokemon name:
+            <input type="text" name="pokemon-name" style={{marginLeft: '10px'}} onChange={handleInputChange}/>
+          </label>
+          <input type="submit" value="Submit" />
+        </form>
+
+        {pokemonFound && <PokemonCard {...pokemon}/>}
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </div>
   )
 }
